@@ -1,0 +1,52 @@
+{% extends "app/base.html" %}
+{% block title %}{{ patient.Full_Name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="eyebrow"><a href="{{ url_for('workspace.patients') }}">Patients</a> / {{ patient.code }}</p><h1 class="h1">{{ patient.Full_Name }}</h1></div>
+  <div class="row-actions">
+    <a class="btn btn-ghost" href="{{ url_for('workspace.patient_edit', pid=patient.Patient_ID) }}">{{ ui.icon('edit') }}<span>Edit</span></a>
+    {% if patient.User_ID == user.User_ID %}<a class="btn btn-gold" href="{{ url_for('workspace.analyse', patient=patient.Patient_ID) }}">{{ ui.icon('scan') }}<span>New study</span></a>{% endif %}
+  </div>
+</div>
+<div class="row g-3 g-lg-4">
+  <div class="col-lg-4">
+    <section class="card reveal">
+      <h2 class="h3">Details</h2>
+      <dl class="facts">
+        <div><dt>Age</dt><dd>{{ patient.Age }} years</dd></div>
+        <div><dt>Gender</dt><dd>{{ patient.Gender }}</dd></div>
+        <div><dt>Hospital number</dt><dd>{{ patient.Hospital_No or 'Not recorded' }}</dd></div>
+        <div><dt>State</dt><dd>{{ patient.State or 'Not recorded' }}</dd></div>
+        <div><dt>Phone</dt><dd>{{ patient.Phone_Number or 'Not recorded' }}</dd></div>
+        <div><dt>Address</dt><dd>{{ patient.Address or 'Not recorded' }}</dd></div>
+        <div><dt>Managed by</dt><dd>{{ patient.owner.Full_Name }}</dd></div>
+        <div><dt>Registered</dt><dd>{{ patient.Date_Created|dt('%d %b %Y') }}</dd></div>
+      </dl>
+      <form method="post" action="{{ url_for('workspace.patient_delete', pid=patient.Patient_ID) }}" data-confirm="Delete {{ patient.Full_Name }}?" data-confirm-text="This removes the patient record, every MRI study and every prediction attached to it. It cannot be undone.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-quiet btn-danger-quiet" type="submit">{{ ui.icon('trash') }}<span>Delete patient</span></button>
+      </form>
+    </section>
+  </div>
+  <div class="col-lg-8">
+    <section class="card reveal" style="--i:1">
+      <header class="card-head"><h2 class="h3">Study history</h2><span class="mono muted">{{ studies|length }}</span></header>
+      {% if studies %}
+      <ol class="timeline">
+        {% for pr in studies %}
+        <li class="tone-{{ pr.Disease_Category|tone }}">
+          <a href="{{ url_for('workspace.study', sid=pr.Prediction_ID) }}">
+            <img src="{{ url_for('workspace.media', sid=pr.Prediction_ID, name='slice_08.png') }}" alt="" loading="lazy" width="56" height="56">
+            <div><b>{{ pr.Disease_Category }}</b><span>{{ pr.Prediction_Date|dt }} · {{ pr.image.Slice_Count }} slices · {{ pr.ref }}</span></div>
+            <span class="mono conf">{{ pr.Confidence_Score|pct(0) }}</span>{{ ui.icon('chevron') }}
+          </a>
+        </li>
+        {% endfor %}
+      </ol>
+      {% else %}
+      <div class="empty"><span class="tok tok-lg">{{ ui.icon('layers') }}</span><h3>No studies yet</h3><p>Upload this patient's MRI series to get the first result.</p>{% if patient.User_ID == user.User_ID %}<a class="btn btn-gold" href="{{ url_for('workspace.analyse', patient=patient.Patient_ID) }}">Analyse a scan</a>{% endif %}</div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

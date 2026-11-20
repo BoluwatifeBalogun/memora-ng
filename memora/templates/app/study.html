@@ -1,0 +1,82 @@
+{% extends "app/base.html" %}
+{% block title %}{{ pr.ref }}{% endblock %}
+{% block content %}
+{% set c = BY_NAME[pr.Disease_Category] %}
+<div class="page-head">
+  <div><p class="eyebrow"><a href="{{ url_for('workspace.patient_detail', pid=patient.Patient_ID) }}">{{ patient.Full_Name }}</a> / {{ pr.ref }}</p><h1 class="h1">Study result</h1></div>
+  <div class="row-actions">
+    <a class="btn btn-ghost" href="{{ url_for('workspace.study_report', sid=pr.Prediction_ID) }}">{{ ui.icon('printer') }}<span>Report</span></a>
+    {% if patient.User_ID == user.User_ID %}<a class="btn btn-gold" href="{{ url_for('workspace.analyse', patient=patient.Patient_ID) }}">{{ ui.icon('scan') }}<span>New study</span></a>{% endif %}
+  </div>
+</div>
+
+<div class="row g-3 g-lg-4">
+  <div class="col-lg-5">
+    <section class="card verdict tone-{{ c.tone }} beam reveal">
+      <p class="eyebrow">Predicted stage</p>
+      <div class="verdict-main">
+        <div class="ring" style="--p:{{ (pr.Confidence_Score * 100)|round(1) }}" role="img" aria-label="Confidence {{ pr.Confidence_Score|pct }}"><b>{{ (pr.Confidence_Score * 100)|round|int }}<small>%</small></b><span>confidence</span></div>
+        <div><h2 class="h2">{{ pr.Disease_Category }}</h2><p>{{ c.summary }}</p></div>
+      </div>
+      <ul class="bars">
+        {% for p in probs %}<li><div class="bars-top"><span>{{ p.name }}</span><b class="mono">{{ p.p|pct }}</b></div><div class="bar tone-{{ p.name|tone }}"><i style="--w:{{ (p.p * 100)|round(1) }}%"></i></div></li>{% endfor %}
+      </ul>
+      <div class="advice">{{ ui.icon('info') }}<p><b>Suggested next step.</b> {{ c.advice }}</p></div>
+      {% if pr.Engine == 'demo' %}<div class="advice advice-warn">{{ ui.icon('alert') }}<p><b>Demonstration result.</b> Produced by the placeholder rule, not by the trained ViT-LSTM. Not for clinical use.</p></div>{% endif %}
+      {% if pr.Series_Quality != 'full' %}<div class="advice advice-warn">{{ ui.icon('alert') }}<p><b>Limited context.</b> {{ image.Slice_Count }} {{ 'slice was' if image.Slice_Count == 1 else 'slices were' }} supplied, so slices were repeated to fill the 16-step sequence.</p></div>{% endif %}
+    </section>
+
+    <section class="card reveal" style="--i:1">
+      <h2 class="h3">Study details</h2>
+      <dl class="facts">
+        <div><dt>Patient</dt><dd>{{ patient.Full_Name }} · {{ patient.Age }} · {{ patient.Gender }}</dd></div>
+        <div><dt>Series</dt><dd>{{ image.Image_Name }}</dd></div>
+        <div><dt>Slices supplied</dt><dd>{{ image.Slice_Count }} ({{ 'NIfTI volume' if image.Source_Kind == 'nifti' else 'image files' }})</dd></div>
+        {% if image.Exam_Date %}<div><dt>Examination date</dt><dd>{{ image.Exam_Date.strftime('%d %b %Y') }}</dd></div>{% endif %}
+        <div><dt>Analysed</dt><dd>{{ pr.Prediction_Date|dt }} by {{ pr.analyst.Full_Name }}</dd></div>
+        <div><dt>Engine</dt><dd>{{ 'Hybrid ViT-LSTM' if pr.Engine == 'model' else 'Demonstration rule' }} · {{ pr.Model_Version }}{% if pr.Latency_Ms is not none %} · {{ pr.Latency_Ms }} ms{% endif %}</dd></div>
+        <div><dt>Status</dt><dd>{{ image.Processing_Status|capitalize }}</dd></div>
+      </dl>
+    </section>
+  </div>
+
+  <div class="col-lg-7">
+    <section class="card reveal" style="--i:1" data-viewer data-base="{{ url_for('workspace.media', sid=pr.Prediction_ID, name='X')[:-1] }}" data-top="{{ top|join(',') }}">
+      <header class="card-head"><h2 class="h3">What the model looked at</h2>
+        <button type="button" class="switch" data-overlay-toggle aria-pressed="true"><i></i><span>Attention map</span></button>
+      </header>
+      <div class="viewer">
+        <img data-main src="{{ url_for('workspace.media', sid=pr.Prediction_ID, name='overlay_%02d.png'|format(top[0])) }}" alt="MRI slice {{ top[0] + 1 }} with the attention map" width="448" height="448">
+        <div class="viewer-meta"><span class="mono" data-slice-label>Slice {{ top[0] + 1 }} of {{ slices|length }}</span><span class="mono" data-weight-label></span></div>
+        <div class="legend"><span>less</span><i></i><span>more attention</span></div>
+      </div>
+      <p class="hint">Bars show how much each of the 16 slices contributed. Tap a slice to view it. Attention maps are saved for the three highest-weighted slices.</p>
+      <div class="strip" role="listbox" aria-label="Slices">
+        {% for s in slices %}
+        <button type="button" role="option" class="strip-item {{ 'is-top' if s.top }} {{ 'is-on' if s.i == top[0] }}" data-slice="{{ s.i }}" data-weight="{{ (s.weight * 100)|round(1) }}" aria-selected="{{ 'true' if s.i == top[0] else 'false' }}" aria-label="Slice {{ s.i + 1 }}, weight {{ (s.weight * 100)|round(1) }} percent">
+          <span class="strip-bar"><i style="--h:{{ (s.rel * 100)|round(1) }}%"></i></span>
+          <img src="{{ url_for('workspace.media', sid=pr.Prediction_ID, name='slice_%02d.png'|format(s.i)) }}" alt="" loading="lazy" width="56" height="56">
+          <span class="mono">{{ s.i + 1 }}</span>
+        </button>
+        {% endfor %}
+      </div>
+      <p class="fine">{{ ui.icon('info') }}The map shows where the transformer attended. It is not a lesion marker.</p>
+    </section>
+
+    <section class="card reveal" style="--i:2">
+      <h2 class="h3">Clinical note</h2>
+      <form method="post" action="{{ url_for('workspace.study_note', sid=pr.Prediction_ID) }}" class="stack" data-busy>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field"><label for="note" class="sr">Clinical note</label><textarea id="note" name="note" rows="4" maxlength="2000" placeholder="Add findings, cognitive test scores or follow-up plans. The note is printed on the report.">{{ pr.Clinician_Note or '' }}</textarea></div>
+        <div class="row-actions between">
+          <button class="btn btn-ghost" type="submit">Save note</button>
+        </div>
+      </form>
+      <form method="post" action="{{ url_for('workspace.study_delete', sid=pr.Prediction_ID) }}" data-confirm="Delete this study?" data-confirm-text="The uploaded slices, attention maps and the prediction {{ pr.ref }} will be removed. It cannot be undone." class="mt-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-quiet btn-danger-quiet" type="submit">{{ ui.icon('trash') }}<span>Delete study</span></button>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}

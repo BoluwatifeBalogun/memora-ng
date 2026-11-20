@@ -1,0 +1,40 @@
+{% extends "app/base.html" %}
+{% block title %}Records{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="eyebrow">Prediction history</p><h1 class="h1">Records</h1></div>
+  <a class="btn btn-ghost" href="{{ url_for('workspace.studies_export', q=q, category=category) }}">{{ ui.icon('download') }}<span>Export CSV</span></a>
+</div>
+<form class="toolbar" method="get" role="search">
+  <div class="searchbox">{{ ui.icon('search') }}<label class="sr" for="q">Search records</label><input id="q" name="q" value="{{ q }}" placeholder="Search by patient, hospital number or state"></div>
+  <div class="chips" role="group" aria-label="Filter by stage">
+    <button class="chip {{ 'is-on' if not category }}" name="category" value="" type="submit">All</button>
+    {% for c in CLASSES %}<button class="chip {{ 'is-on' if category == c.name }}" name="category" value="{{ c.name }}" type="submit">{{ c.short }}</button>{% endfor %}
+  </div>
+</form>
+{% if page.items %}
+<div class="card card-flush reveal">
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Patient</th><th>Result</th><th class="num">Confidence</th><th class="d-none d-md-table-cell">Slices</th><th class="d-none d-lg-table-cell">Analysed by</th><th>Date</th><th><span class="sr">Open</span></th></tr></thead>
+    <tbody>
+      {% for pr in page.items %}
+      <tr>
+        <td><a class="cell-main" href="{{ url_for('workspace.study', sid=pr.Prediction_ID) }}"><b>{{ pr.patient.Full_Name }}</b><span>{{ pr.patient.code }}{% if pr.patient.State %} · {{ pr.patient.State }}{% endif %}</span></a></td>
+        <td>{{ ui.badge(pr.Disease_Category) }}{% if pr.Engine == 'demo' %}<span class="tag">demo</span>{% endif %}</td>
+        <td class="num mono">{{ pr.Confidence_Score|pct }}</td>
+        <td class="d-none d-md-table-cell mono">{{ pr.image.Slice_Count }}</td>
+        <td class="d-none d-lg-table-cell">{{ pr.analyst.Full_Name }}</td>
+        <td class="nowrap">{{ pr.Prediction_Date|dt('%d %b %Y') }}</td>
+        <td><a class="icon-btn" href="{{ url_for('workspace.study', sid=pr.Prediction_ID) }}" aria-label="Open {{ pr.ref }}">{{ ui.icon('chevron') }}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{{ ui.pager(page, 'workspace.studies', {'q': q, 'category': category}) }}
+{% else %}
+<div class="card"><div class="empty"><span class="tok tok-lg">{{ ui.icon('records') }}</span><h3>{{ 'Nothing matches those filters' if q or category else 'No records yet' }}</h3><p>{{ 'Clear the search or choose a different stage.' if q or category else 'Results appear here as soon as the first study is analysed.' }}</p>{% if q or category %}<a class="btn btn-ghost" href="{{ url_for('workspace.studies') }}">Clear filters</a>{% else %}<a class="btn btn-gold" href="{{ url_for('workspace.analyse') }}">Analyse a scan</a>{% endif %}</div></div>
+{% endif %}
+{% endblock %}

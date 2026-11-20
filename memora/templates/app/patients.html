@@ -1,0 +1,30 @@
+{% extends "app/base.html" %}
+{% block title %}Patients{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="eyebrow">Records</p><h1 class="h1">Patients</h1></div>
+  <a class="btn btn-gold" href="{{ url_for('workspace.patient_new') }}">{{ ui.icon('plus') }}<span>New patient</span></a>
+</div>
+<form class="toolbar" method="get" role="search">
+  <div class="searchbox">{{ ui.icon('search') }}<label class="sr" for="q">Search patients</label><input id="q" name="q" value="{{ q }}" placeholder="Search by name, hospital number or state"></div>
+  <button class="btn btn-ghost" type="submit">Search</button>
+  {% if q %}<a class="btn btn-quiet" href="{{ url_for('workspace.patients') }}">Clear</a>{% endif %}
+</form>
+{% if page.items %}
+<div class="row g-3 g-lg-4">
+  {% for p in page.items %}
+  <div class="col-md-6 col-xl-4">
+    <a class="pcard spot reveal" style="--i:{{ loop.index0 % 3 }}" href="{{ url_for('workspace.patient_detail', pid=p.Patient_ID) }}">
+      <header><span class="mono">{{ p.code }}</span>{% if latest.get(p.Patient_ID) %}{{ ui.badge(latest[p.Patient_ID].Disease_Category) }}{% else %}<span class="badge tone-none"><i></i>No study</span>{% endif %}</header>
+      <h2 class="h3">{{ p.Full_Name }}</h2>
+      <p>{{ p.Age }} years · {{ p.Gender }}{% if p.State %} · {{ p.State }}{% endif %}</p>
+      <footer><span>{{ p.predictions.count() }} {{ 'study' if p.predictions.count() == 1 else 'studies' }}</span>{{ ui.icon('arrow') }}</footer>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{{ ui.pager(page, 'workspace.patients', {'q': q}) }}
+{% else %}
+<div class="card"><div class="empty"><span class="tok tok-lg">{{ ui.icon('users') }}</span><h3>{{ 'No patients match that search' if q else 'No patients yet' }}</h3><p>{{ 'Try a different name, hospital number or state.' if q else 'Create a patient record first, then attach MRI studies to it.' }}</p>{% if not q %}<a class="btn btn-gold" href="{{ url_for('workspace.patient_new') }}">Create the first patient</a>{% endif %}</div></div>
+{% endif %}
+{% endblock %}

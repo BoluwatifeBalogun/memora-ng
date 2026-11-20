@@ -1,0 +1,53 @@
+{% import "partials/ui.html" as ui %}
+<!doctype html>
+<html lang="en">
+<head><title>{% block title %}Workspace{% endblock %} · Memora NG</title>{% include "partials/head.html" %}</head>
+<body class="app">
+<div class="grain" aria-hidden="true"></div>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <a href="{{ url_for('workspace.dashboard') }}" aria-label="Memora NG dashboard">{{ ui.logo() }}</a>
+  <div class="topbar-right">
+    <a class="engine engine-{{ engine_mode }}" href="{{ url_for('workspace.model') }}" title="Open the model page"><i></i><span>{{ 'ViT-LSTM model live' if engine_mode == 'model' else 'Demonstration engine' }}</span></a>
+    <div class="menu" data-menu>
+      <button type="button" class="avatar" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">{{ user.initials }}</button>
+      <div class="menu-pop" role="menu" hidden>
+        <div class="menu-who"><b>{{ user.Full_Name }}</b><span>{{ 'Administrator' if user.is_admin else 'Healthcare professional' }}{% if user.Facility %} · {{ user.Facility }}{% endif %}</span></div>
+        <a role="menuitem" href="{{ url_for('workspace.account') }}">{{ ui.icon('key') }}Account and password</a>
+        {% if user.is_admin %}
+        <a role="menuitem" href="{{ url_for('admin.users') }}">{{ ui.icon('users') }}Manage users</a>
+        <a role="menuitem" href="{{ url_for('admin.activity') }}">{{ ui.icon('activity') }}Activity log</a>
+        {% endif %}
+        <form method="post" action="{{ url_for('auth.sign_out') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button role="menuitem" type="submit">{{ ui.icon('logout') }}Sign out</button></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+{{ ui.flashes() }}
+{% if engine_mode == 'demo' %}
+<div class="demo-bar" role="note">{{ ui.icon('info') }}<p><b>Demonstration engine.</b> <span class="d-none d-md-inline">No trained model file is installed, so results come from a simple placeholder rule and must not be used clinically.</span><span class="d-md-none">Placeholder results, not for clinical use.</span> <a href="{{ url_for('workspace.model') }}">How to install the trained model</a></p></div>
+{% endif %}
+
+<main id="main" class="page">
+  <div class="wrap">{% block content %}{% endblock %}</div>
+</main>
+
+<nav class="dock" aria-label="Workspace" data-dock>
+  {% set items = [('home','workspace.dashboard','home','Home'),('patients','workspace.patients','users','Patients'),('analyse','workspace.analyse','scan','Analyse'),('records','workspace.studies','records','Records'),('model','workspace.model','model','Model')] %}
+  {% for key, ep, ic, label in items %}
+  <a href="{{ url_for(ep) }}" class="dock-item {{ 'is-active' if active == key }} {{ 'dock-primary' if key == 'analyse' }}" {% if active == key %}aria-current="page"{% endif %}>{{ ui.icon(ic) }}<span>{{ label }}</span></a>
+  {% endfor %}
+</nav>
+
+<dialog class="confirm" id="confirm">
+  <form method="dialog">
+    <span class="tok tok-danger">{{ ui.icon('alert') }}</span>
+    <h2 class="h3" data-confirm-title>Are you sure?</h2>
+    <p data-confirm-text></p>
+    <div class="row-actions end"><button class="btn btn-quiet" value="cancel" type="submit">Cancel</button><button class="btn btn-danger" value="ok" type="submit" data-confirm-ok>Delete</button></div>
+  </form>
+</dialog>
+</body>
+</html>

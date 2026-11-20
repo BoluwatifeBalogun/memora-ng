@@ -1,0 +1,96 @@
+{# Shared UI macros: icons, brain illustration, form fields, pagination #}
+{% set ICONS = {
+ 'home':'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+ 'users':'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
+ 'scan':'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M4 12h16"/>',
+ 'records':'<path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+ 'model':'<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9.5 9.5h5v5h-5zM9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/>',
+ 'shield':'<path d="M12 3 4.5 6v5.5c0 4.6 3.1 8 7.5 9.5 4.4-1.5 7.5-4.9 7.5-9.5V6z"/>',
+ 'activity':'<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+ 'logout':'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+ 'user':'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+ 'plus':'<path d="M12 5v14M5 12h14"/>',
+ 'search':'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/>',
+ 'download':'<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
+ 'printer':'<path d="M7 8V3h10v5"/><rect x="3" y="8" width="18" height="9" rx="2"/><path d="M7 14h10v7H7z"/>',
+ 'arrow':'<path d="M5 12h14M13 6l6 6-6 6"/>',
+ 'check':'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+ 'alert':'<path d="M12 3 2 20h20z"/><path d="M12 10v4.5M12 17.5v.01"/>',
+ 'upload':'<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
+ 'trash':'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
+ 'edit':'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+ 'chevron':'<path d="m9 6 6 6-6 6"/>',
+ 'layers':'<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
+ 'clock':'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ 'key':'<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3"/>',
+ 'x':'<path d="M6 6l12 12M18 6 6 18"/>',
+ 'pin':'<path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+ 'eye':'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+ 'file':'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h6"/>',
+ 'grid':'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',
+ 'info':'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/>',
+ 'lock':'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+ 'server':'<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5v.01M7 16.5v.01"/>'
+} %}
+{% macro icon(name, cls='') %}<svg class="ic {{ cls }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ ICONS[name]|safe }}</svg>{% endmacro %}
+
+{% macro logo() %}<span class="logo"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".35"/><path d="M9 21V11l7 7 7-7v10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="18" r="1.6" fill="currentColor"/></svg><span>Memora<em>NG</em></span></span>{% endmacro %}
+
+{# stylised axial brain slice. vent scales the ventricles (1 = typical, 1.5 = enlarged) #}
+{% macro brain(vent=1.0, cls='') %}
+<svg class="brain {{ cls }}" viewBox="0 0 200 220" aria-hidden="true">
+  <ellipse cx="100" cy="110" rx="88" ry="102" class="b-skull"/>
+  <ellipse cx="100" cy="110" rx="77" ry="91" class="b-tissue"/>
+  <g class="b-gyri">
+    <path d="M100 20v180"/>
+    <path d="M62 44c10 6 8 18-2 22s-12 16-2 22"/><path d="M138 44c-10 6-8 18 2 22s12 16 2 22"/>
+    <path d="M36 92c12-2 18 8 12 16s0 18 10 18"/><path d="M164 92c-12-2-18 8-12 16s0 18-10 18"/>
+    <path d="M46 150c10-6 20 0 20 10s10 14 18 8"/><path d="M154 150c-10-6-20 0-20 10s-10 14-18 8"/>
+    <path d="M78 34c6 8 2 16-6 18"/><path d="M122 34c-6 8-2 16 6 18"/>
+    <path d="M70 178c6-6 14-4 16 4"/><path d="M130 178c-6-6-14-4-16 4"/>
+  </g>
+  <g class="b-vent" transform="translate(100 112) scale({{ vent }}) translate(-100 -112)">
+    <path d="M93 84c-12-9-24 4-17 21 5 12 3 26-6 38 13-3 22-17 23-34z"/>
+    <path d="M107 84c12-9 24 4 17 21-5 12-3 26 6 38-13-3-22-17-23-34z"/>
+  </g>
+</svg>
+{% endmacro %}
+
+{% macro field(name, label, value='', type='text', errors={}, hint='', required=false, attrs='', autocomplete='') %}
+<div class="field {{ 'has-error' if errors.get(name) }}">
+  <label for="f-{{ name }}">{{ label }}{% if not required %} <span class="opt">optional</span>{% endif %}</label>
+  <input id="f-{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ value if value is not none else '' }}" {{ 'required' if required }} {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %} {{ attrs|safe }} {% if errors.get(name) %}aria-invalid="true" aria-describedby="e-{{ name }}"{% endif %}>
+  {% if errors.get(name) %}<p class="err" id="e-{{ name }}">{{ icon('alert') }}{{ errors[name] }}</p>{% elif hint %}<p class="hint">{{ hint }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro select(name, label, options, value='', errors={}, required=false, placeholder='Select') %}
+<div class="field {{ 'has-error' if errors.get(name) }}">
+  <label for="f-{{ name }}">{{ label }}{% if not required %} <span class="opt">optional</span>{% endif %}</label>
+  <div class="select"><select id="f-{{ name }}" name="{{ name }}" {{ 'required' if required }}>
+    <option value="">{{ placeholder }}</option>
+    {% for o in options %}{% if o is string %}<option value="{{ o }}" {{ 'selected' if o == value }}>{{ o }}</option>{% else %}<option value="{{ o[0] }}" {{ 'selected' if o[0]|string == value|string }}>{{ o[1] }}</option>{% endif %}{% endfor %}
+  </select>{{ icon('chevron') }}</div>
+  {% if errors.get(name) %}<p class="err">{{ icon('alert') }}{{ errors[name] }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro badge(category) %}<span class="badge tone-{{ category|tone }}"><i></i>{{ BY_NAME[category].short if category in BY_NAME else category }}</span>{% endmacro %}
+
+{% macro pager(page, endpoint, args={}) %}
+{% if page.pages > 1 %}
+<nav class="pager" aria-label="Pages">
+  {% if page.has_prev %}<a class="btn btn-quiet" href="{{ url_for(endpoint, page=page.prev_num, **args) }}">Previous</a>{% else %}<span class="btn btn-quiet is-off">Previous</span>{% endif %}
+  <span class="pager-pos">Page {{ page.page }} of {{ page.pages }}</span>
+  {% if page.has_next %}<a class="btn btn-quiet" href="{{ url_for(endpoint, page=page.next_num, **args) }}">Next</a>{% else %}<span class="btn btn-quiet is-off">Next</span>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% macro flashes() %}
+{% with msgs = get_flashed_messages(with_categories=true) %}{% if msgs %}
+<div class="toasts" role="status" aria-live="polite">
+  {% for cat, m in msgs %}<div class="toast toast-{{ cat }}" {% if cat in ('success','info') and 'Temporary password' not in m %}data-autoclose{% endif %}>{{ icon('check' if cat == 'success' else ('alert' if cat in ('error','warn') else 'info')) }}<p>{{ m }}</p><button type="button" class="toast-x" aria-label="Dismiss message">{{ icon('x') }}</button></div>{% endfor %}
+</div>
+{% endif %}{% endwith %}
+{% endmacro %}

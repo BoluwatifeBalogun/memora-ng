@@ -1,0 +1,29 @@
+{% extends "app/base.html" %}
+{% block title %}Account{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Account</p><h1 class="h1">{{ user.Full_Name }}</h1></div></div>
+<div class="row g-3 g-lg-4">
+  <div class="col-lg-5">
+    <section class="card"><h2 class="h3">Profile</h2>
+      <dl class="facts">
+        <div><dt>Email</dt><dd>{{ user.Email }}</dd></div>
+        <div><dt>Role</dt><dd>{{ 'Administrator' if user.is_admin else 'Healthcare professional' }}</dd></div>
+        <div><dt>Facility</dt><dd>{{ user.Facility or 'Not recorded' }}</dd></div>
+        <div><dt>State</dt><dd>{{ user.State or 'Not recorded' }}</dd></div>
+        <div><dt>Member since</dt><dd>{{ user.Date_Created|dt('%d %b %Y') }}</dd></div>
+      </dl>
+      <p class="fine">{{ ui.icon('info') }}Ask an administrator to change your name, facility or role.</p>
+    </section>
+  </div>
+  <div class="col-lg-7">
+    <form method="post" class="card form-card" novalidate data-busy>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <h2 class="h3">Change password</h2>
+      {{ ui.field('current', 'Current password', '', type='password', errors=errors, required=true, autocomplete='current-password') }}
+      {{ ui.field('new', 'New password', '', type='password', errors=errors, required=true, autocomplete='new-password', hint='At least 8 characters with a mix of letters and numbers or symbols.') }}
+      {{ ui.field('again', 'Repeat new password', '', type='password', errors=errors, required=true, autocomplete='new-password') }}
+      <div class="row-actions end form-actions"><button class="btn btn-gold" type="submit">Update password</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

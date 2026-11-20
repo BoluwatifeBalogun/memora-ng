@@ -1,0 +1,276 @@
+{% import "partials/ui.html" as ui %}
+<!doctype html>
+<html lang="en">
+<head><title>Memora NG · Early Alzheimer's detection from MRI with ViT and LSTM</title>{% include "partials/head.html" %}</head>
+<body class="site">
+<div class="grain" aria-hidden="true"></div>
+<a class="skip" href="#main">Skip to content</a>
+{{ ui.flashes() }}
+
+<header class="nav" data-nav>
+  <div class="nav-inner">
+    <a href="{{ url_for('public.home') }}" aria-label="Memora NG home">{{ ui.logo() }}</a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#how">How it works</a><a href="#features">Features</a><a href="#stages">Stages</a><a href="#coverage">Coverage</a><a href="#faq">Questions</a>
+    </nav>
+    {% if user %}<a class="btn btn-gold btn-sm" href="{{ url_for('workspace.dashboard') }}"><span>Workspace</span>{{ ui.icon('arrow') }}</a>
+    {% else %}<a class="btn btn-gold btn-sm" href="{{ url_for('auth.sign_in') }}"><span>Sign in</span>{{ ui.icon('arrow') }}</a>{% endif %}
+  </div>
+</header>
+
+<main id="main">
+<!-- hero -->
+<section class="hero">
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="dots" aria-hidden="true"></div>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="pill reveal"><i class="dot"></i>Decision support for Nigeria's MRI centres</p>
+      <h1 class="display reveal" style="--i:1">Read the whole scan. Catch Alzheimer's <span class="shimmer">early</span>.</h1>
+      <p class="lead reveal" style="--i:2">Memora NG pairs a Vision Transformer with an LSTM network to study a patient's MRI slices in order, the way a radiologist scrolls through them, and returns a stage prediction with a confidence score.</p>
+      <div class="row-actions reveal" style="--i:3">
+        <a class="btn btn-gold btn-lg" data-magnet href="{{ url_for('workspace.analyse') if user else url_for('auth.sign_in') }}"><span>Open the workspace</span>{{ ui.icon('arrow') }}</a>
+        <a class="btn btn-ghost btn-lg" href="#how">How it reads a scan</a>
+      </div>
+      <ul class="hero-facts reveal" style="--i:4">
+        <li><b>16</b><span>ordered slices per study</span></li>
+        <li><b>3</b><span>stages: normal, early, Alzheimer's</span></li>
+        <li><b>36</b><span>states plus the FCT</span></li>
+      </ul>
+    </div>
+
+    <div class="hero-stage reveal" style="--i:2" data-tilt aria-hidden="true">
+      <div class="stage-card stage-scan beam">
+        <header><span class="mono">AXIAL · SLICE 09 / 16</span><span class="live"><i></i>analysing</span></header>
+        <div class="scanner">
+          {{ ui.brain(1.2) }}
+          <div class="patchgrid">{% for i in range(49) %}<i></i>{% endfor %}</div>
+          <div class="scanline"></div>
+        </div>
+        <div class="seq">{% for i in range(16) %}<i style="--n:{{ i }}"></i>{% endfor %}</div>
+        <footer><span class="mono">ViT patches 14 × 14</span><span class="mono">LSTM →←</span></footer>
+      </div>
+      <div class="stage-card stage-result">
+        <p class="eyebrow">Sample output</p>
+        <div class="ring ring-sm" style="--p:86"><b>86<small>%</small></b></div>
+        <div>
+          <p class="stage-label">Early stage (MCI)</p>
+          <div class="mini-bars"><span style="--w:10%"></span><span class="on" style="--w:86%"></span><span style="--w:4%"></span></div>
+        </div>
+      </div>
+      <div class="stage-card stage-chip"><span class="tok">{{ ui.icon('layers') }}</span><div><b>Slices 7 to 11</b><small>carried most weight</small></div></div>
+    </div>
+  </div>
+
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      {% for rep in range(2) %}{% for s in STATES %}<span>{{ s }}</span><i></i>{% endfor %}{% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- burden -->
+<section class="band">
+  <div class="wrap">
+    <div class="row g-4 align-items-end">
+      <div class="col-lg-5 reveal">
+        <p class="eyebrow">Why early matters</p>
+        <h2 class="h1">By the time it is obvious, the damage is done.</h2>
+      </div>
+      <div class="col-lg-6 offset-lg-1 reveal" style="--i:1">
+        <p class="lead">Early Alzheimer's looks like ordinary forgetfulness, and the structural changes are subtle and spread across many slices. Manual reading is slow and varies between readers. Treatment and planning work best when the disease is found at its earliest stage.</p>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat reveal"><b><span data-count="55">55</span>M+</b><p>people living with dementia worldwide</p></div>
+      <div class="stat reveal" style="--i:1"><b>~<span data-count="10">10</span>M</b><p>new cases diagnosed every year</p></div>
+      <div class="stat reveal" style="--i:2"><b><span data-count="60">60</span> to <span data-count="80">80</span>%</b><p>of dementia cases are Alzheimer's disease</p></div>
+    </div>
+    <p class="source">Figures: World Health Organization (2023) and Alzheimer's Association (2024).</p>
+  </div>
+</section>
+
+<!-- how it works -->
+<section class="section" id="how">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">How it reads a scan</p>
+      <h2 class="h1">Space first. Then sequence.</h2>
+      <p class="lead">A convolutional network looks at small neighbourhoods of one image. Memora looks across each whole slice, then across the whole series.</p>
+    </div>
+    <ol class="steps">
+      <li class="step spot reveal">
+        <span class="step-n mono">01</span>
+        <div class="step-art art-upload">{% for i in range(5) %}<i style="--n:{{ i }}"></i>{% endfor %}</div>
+        <h3>Upload the series</h3>
+        <p>Drop the axial slices from one scan, or a single NIfTI volume. The study is tied to a patient record.</p>
+      </li>
+      <li class="step spot reveal" style="--i:1">
+        <span class="step-n mono">02</span>
+        <div class="step-art art-check">{{ ui.icon('check') }}<span></span><span></span><span></span></div>
+        <h3>Check and prepare</h3>
+        <p>Each slice is confirmed to be a greyscale brain MRI, intensity is normalised, and the series is resampled to 16 ordered slices.</p>
+      </li>
+      <li class="step spot reveal" style="--i:2">
+        <span class="step-n mono">03</span>
+        <div class="step-art art-vit">{% for i in range(36) %}<i></i>{% endfor %}</div>
+        <h3>Vision Transformer</h3>
+        <p>Every slice is cut into 196 patches. Self-attention relates each patch to every other, so distant regions inform each other.</p>
+      </li>
+      <li class="step spot reveal" style="--i:3">
+        <span class="step-n mono">04</span>
+        <div class="step-art art-lstm">{% for i in range(8) %}<i style="--n:{{ i }}"></i>{% endfor %}</div>
+        <h3>LSTM across slices</h3>
+        <p>A bidirectional LSTM reads the 16 slice vectors in order and keeps what matters from neighbouring slices.</p>
+      </li>
+      <li class="step step-wide spot reveal" style="--i:4">
+        <span class="step-n mono">05</span>
+        <div class="step-art art-result"><div class="ring ring-xs" style="--p:72"></div><div class="mini-bars"><span style="--w:18%"></span><span class="on" style="--w:72%"></span><span style="--w:10%"></span></div></div>
+        <h3>A result you can check</h3>
+        <p>Stage, confidence, class probabilities, the slices that weighed most and an attention map. Everything is saved to the patient's history and can be printed as a report.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- features -->
+<section class="section section-alt" id="features">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">What is inside</p>
+      <h2 class="h1">Built for the reading room, not the lab.</h2>
+    </div>
+    <div class="bento">
+      <article class="tile tile-a spot reveal">
+        <div class="tile-art filmstrip-art">{% for v in [0.8,0.9,1.0,1.15,1.3,1.4,1.3,1.1,0.95] %}<div>{{ ui.brain(v) }}</div>{% endfor %}</div>
+        <h3>Sequence aware</h3>
+        <p>The model reads slices in anatomical order. Atrophy that only shows as a trend across neighbouring slices is not lost.</p>
+      </article>
+      <article class="tile tile-b spot reveal" style="--i:1">
+        <div class="tile-art heat-art">{{ ui.brain(1.3) }}<span></span></div>
+        <h3>Shows its working</h3>
+        <p>Slice weights and a transformer attention map show what the prediction leaned on.</p>
+      </article>
+      <article class="tile tile-c spot reveal" style="--i:2">
+        <span class="tok">{{ ui.icon('records') }}</span>
+        <h3>Patient history</h3>
+        <p>Every study is stored against the patient, so change over time is one click away.</p>
+      </article>
+      <article class="tile tile-d spot reveal" style="--i:1">
+        <span class="tok">{{ ui.icon('printer') }}</span>
+        <h3>Printable report</h3>
+        <p>A clean one-page report with the result, probabilities, key slices and your clinical note.</p>
+      </article>
+      <article class="tile tile-e spot reveal" style="--i:2">
+        <span class="tok">{{ ui.icon('shield') }}</span>
+        <h3>Controlled access</h3>
+        <p>Administrators register users. Clinicians see only their own patients. Every action is logged.</p>
+      </article>
+      <article class="tile tile-f spot reveal" style="--i:3">
+        <span class="tok">{{ ui.icon('server') }}</span>
+        <h3>Runs on a modest server</h3>
+        <p>The trained network is exported to ONNX and served on an ordinary CPU. No GPU is needed at the hospital.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- stages -->
+<section class="section" id="stages">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">What it reports</p>
+      <h2 class="h1">Three stages, one confidence score.</h2>
+    </div>
+    <div class="row g-4">
+      {% for c in CLASSES %}
+      <div class="col-md-4">
+        <article class="stage tone-{{ c.tone }} spot reveal" style="--i:{{ loop.index0 }}">
+          <div class="stage-brain">{{ ui.brain([0.85, 1.15, 1.5][loop.index0]) }}</div>
+          <span class="badge tone-{{ c.tone }}"><i></i>{{ c.key }}</span>
+          <h3>{{ c.name }}</h3>
+          <p>{{ c.summary }}</p>
+        </article>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="source">Illustrations are stylised. Ventricle size is one of several structural signs and is drawn larger here for clarity.</p>
+  </div>
+</section>
+
+<!-- coverage -->
+<section class="section section-alt" id="coverage">
+  <div class="wrap">
+    <div class="row g-4 align-items-end section-head">
+      <div class="col-lg-7 reveal">
+        <p class="eyebrow">Made for Nigeria</p>
+        <h2 class="h1">Six zones. Thirty-seven places to start.</h2>
+      </div>
+      <div class="col-lg-5 reveal" style="--i:1">
+        <p class="lead">It runs in a browser, so any centre with an MRI unit and an internet connection can use it. Each patient is tagged by state, and the dashboard groups studies by geopolitical zone.</p>
+      </div>
+    </div>
+    <div class="zones">
+      {% for zone, states in ZONES.items() %}
+      <article class="zone spot reveal" style="--i:{{ loop.index0 % 3 }}">
+        <header><h3>{{ zone }}</h3><span class="mono">{{ states|length }}</span></header>
+        <ul>{% for s in states %}<li>{{ s }}</li>{% endfor %}</ul>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- honesty -->
+<section class="section">
+  <div class="wrap">
+    <div class="oath beam reveal">
+      <span class="tok tok-lg">{{ ui.icon('shield') }}</span>
+      <h2 class="h1">A second reader. Never the final word.</h2>
+      <p class="lead">Memora NG is a decision-support tool for healthcare professionals. It analyses MRI only. It does not replace clinical judgement, cognitive assessment, laboratory tests or other imaging, and it does not give a final medical diagnosis.</p>
+    </div>
+  </div>
+</section>
+
+<!-- faq -->
+<section class="section section-alt" id="faq">
+  <div class="wrap">
+    <div class="row g-4 g-lg-5">
+      <div class="col-lg-4 reveal">
+        <p class="eyebrow">Questions</p>
+        <h2 class="h1">Before you sign in.</h2>
+      </div>
+      <div class="col-lg-8">
+        <div class="faq">
+          <details class="reveal" open><summary>What do I upload?<span>{{ ui.icon('plus') }}</span></summary><p>The axial slices from one T1-weighted brain MRI as PNG, JPG, BMP or TIFF files named in order, or a single NIfTI volume (.nii or .nii.gz). Sixteen or more slices through the ventricles and hippocampus give the best context.</p></details>
+          <details class="reveal"><summary>Why does it want several slices?<span>{{ ui.icon('plus') }}</span></summary><p>The LSTM learns how the picture changes from one slice to the next. A single slice is accepted, but the sequence part of the model then has nothing to compare, and the result is marked as limited context.</p></details>
+          <details class="reveal"><summary>What does the attention map show?<span>{{ ui.icon('plus') }}</span></summary><p>The regions the Vision Transformer attended to most on the slices that carried the most weight. It shows where the model looked. It is not a lesion marker and should not be read as one.</p></details>
+          <details class="reveal"><summary>Who can create accounts?<span>{{ ui.icon('plus') }}</span></summary><p>Only an administrator. Healthcare professionals receive their login from the administrator at their facility.</p></details>
+          <details class="reveal"><summary>Where is patient data kept?<span>{{ ui.icon('plus') }}</span></summary><p>In the deployment's own MySQL database and storage. Passwords are stored as salted hashes, records are visible only to the clinician who owns them and to administrators, and sign-ins and exports are written to an activity log.</p></details>
+          <details class="reveal"><summary>Does it replace the radiologist?<span>{{ ui.icon('plus') }}</span></summary><p>No. It gives a fast, consistent second read to support the specialist's decision.</p></details>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- cta -->
+<section class="cta">
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="wrap reveal">
+    <h2 class="display">Start with one scan.</h2>
+    <a class="btn btn-gold btn-lg" data-magnet href="{{ url_for('workspace.analyse') if user else url_for('auth.sign_in') }}"><span>Open the workspace</span>{{ ui.icon('arrow') }}</a>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-grid">
+    <div>{{ ui.logo() }}<p>Web-based system for early detection of Alzheimer's disease from MRI images using Vision Transformer and Long Short-Term Memory networks.</p></div>
+    <nav aria-label="Footer"><a href="#how">How it works</a><a href="#features">Features</a><a href="#coverage">Coverage</a><a href="{{ url_for('auth.sign_in') }}">Sign in</a></nav>
+    <p class="fine">For decision support only. Not a medical device. © {{ year }} Memora NG.</p>
+  </div>
+  <div class="wordmark" aria-hidden="true">Memora</div>
+</footer>
+</body>
+</html>

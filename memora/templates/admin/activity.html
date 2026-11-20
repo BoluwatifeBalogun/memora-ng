@@ -1,0 +1,13 @@
+{% extends "app/base.html" %}
+{% block title %}Activity log{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow"><a href="{{ url_for('admin.users') }}">Administration</a> / Log</p><h1 class="h1">Activity log</h1></div></div>
+{% if page.items %}
+<div class="card card-flush reveal"><div class="table-wrap">
+  <table class="table table-compact">
+    <thead><tr><th>When</th><th>User</th><th>Action</th><th>Detail</th><th class="d-none d-md-table-cell">IP address</th></tr></thead>
+    <tbody>{% for l in page.items %}<tr><td class="nowrap mono">{{ l.Created_At|dt('%d %b %H:%M') }}</td><td>{{ l.user.Full_Name if l.user else 'Unknown' }}</td><td><span class="tag">{{ l.Action|replace('_',' ') }}</span></td><td>{{ l.Detail }}</td><td class="mono d-none d-md-table-cell">{{ l.IP }}</td></tr>{% endfor %}</tbody>
+  </table></div></div>
+{{ ui.pager(page, 'admin.activity') }}
+{% else %}<div class="card"><div class="empty"><h3>No activity recorded yet</h3></div></div>{% endif %}
+{% endblock %}

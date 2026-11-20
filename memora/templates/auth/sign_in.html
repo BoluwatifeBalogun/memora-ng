@@ -1,0 +1,46 @@
+{% import "partials/ui.html" as ui %}
+<!doctype html>
+<html lang="en">
+<head><title>Sign in · Memora NG</title>{% include "partials/head.html" %}</head>
+<body class="auth">
+  <div class="grain" aria-hidden="true"></div>
+  {{ ui.flashes() }}
+  <main class="auth-grid">
+    <section class="auth-art" aria-hidden="true">
+      <div class="auth-art-inner">
+        <div class="scanner scanner-lg">
+          {{ ui.brain(1.15) }}
+          <div class="patchgrid">{% for i in range(49) %}<i></i>{% endfor %}</div>
+          <div class="scanline"></div>
+        </div>
+        <p class="auth-quote">Sixteen slices, read in order.<br><span>One careful second opinion.</span></p>
+      </div>
+    </section>
+    <section class="auth-panel">
+      <a href="{{ url_for('public.home') }}" class="auth-logo" aria-label="Memora NG home">{{ ui.logo() }}</a>
+      <h1 class="h2">Welcome back</h1>
+      <p class="lead">Sign in to the clinical workspace.</p>
+      <form method="post" class="stack" novalidate data-busy>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {{ ui.field('email', 'Work email', email, type='email', required=true, autocomplete='username', attrs='inputmode="email" autofocus') }}
+        <div class="field">
+          <label for="f-password">Password</label>
+          <div class="pw"><input id="f-password" name="password" type="password" required autocomplete="current-password"><button type="button" class="pw-toggle" data-pw-toggle aria-label="Show password" aria-pressed="false">{{ ui.icon('eye') }}</button></div>
+        </div>
+        <button class="btn btn-gold btn-block" type="submit"><span>Sign in</span>{{ ui.icon('arrow') }}</button>
+      </form>
+      <p class="fine">{{ ui.icon('lock') }}Accounts are created by your administrator. There is no public sign-up.</p>
+      {% if demo|default(false) %}
+      <div class="demo-logins">
+        <p class="eyebrow">Development logins</p>
+        <dl>
+          <div><dt>Administrator</dt><dd>admin@memora.ng <span>Memora@2026</span></dd></div>
+          <div><dt>Healthcare professional</dt><dd>clinician@memora.ng <span>Clinic@2026</span></dd></div>
+        </dl>
+        <p class="fine">Shown only outside production. Change both passwords before deployment.</p>
+      </div>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

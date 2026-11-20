@@ -1,0 +1,9 @@
+Flask>=3.0,<4
+Flask-SQLAlchemy>=3.1,<4
+PyMySQL>=1.1
+cryptography>=42        # needed by PyMySQL for MySQL 8 password authentication
+onnxruntime>=1.17
+numpy>=1.26
+Pillow>=10
+nibabel>=5.2
+gunicorn>=21

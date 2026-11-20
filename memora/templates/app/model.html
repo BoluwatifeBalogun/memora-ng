@@ -1,0 +1,87 @@
+{% extends "app/base.html" %}
+{% block title %}Model{% endblock %}
+{% block content %}
+{% set t = card.get('test') %}
+<div class="page-head">
+  <div><p class="eyebrow">Artificial intelligence layer</p><h1 class="h1">Hybrid ViT-LSTM model</h1></div>
+  <span class="engine engine-{{ engine_mode }} engine-lg"><i></i><span>{{ ('Live · ' ~ card.get('version','')) if engine_mode == 'model' else 'Demonstration engine' }}</span></span>
+</div>
+
+<section class="card reveal">
+  <header class="card-head"><h2 class="h3">How a study flows through the network</h2></header>
+  <div class="arch">
+    <div class="arch-node"><span class="tok">{{ ui.icon('layers') }}</span><b>MRI series</b><small>{{ seq_len }} ordered slices, 224 × 224</small></div>
+    <span class="arch-wire"></span>
+    <div class="arch-node arch-gold"><span class="tok">{{ ui.icon('grid') }}</span><b>Vision Transformer</b><small>196 patches per slice, self-attention, one feature vector per slice</small></div>
+    <span class="arch-wire"></span>
+    <div class="arch-node arch-gold"><span class="tok">{{ ui.icon('activity') }}</span><b>Bidirectional LSTM</b><small>reads the {{ seq_len }} vectors forwards and backwards</small></div>
+    <span class="arch-wire"></span>
+    <div class="arch-node"><span class="tok">{{ ui.icon('eye') }}</span><b>Slice attention</b><small>weighs the slices and pools them</small></div>
+    <span class="arch-wire"></span>
+    <div class="arch-node"><span class="tok">{{ ui.icon('check') }}</span><b>Classifier</b><small>{{ CLASSES|length }} stages with a confidence score</small></div>
+  </div>
+</section>
+
+{% if engine_mode == 'model' and t %}
+<div class="row g-3 g-lg-4 mt-0">
+  {% for label, key in [('Accuracy','accuracy'),('Precision','precision_macro'),('Recall','recall_macro'),('F1-score','f1_macro'),('ROC-AUC','roc_auc_ovr_macro')] %}
+  <div class="col-6 col-lg"><div class="kpi spot reveal" style="--i:{{ loop.index0 }}"><p>{{ label }}</p><b>{{ t.get(key)|pct if t.get(key) is not none else 'n/a' }}</b><small>{{ 'held-out test set' if loop.first else 'macro average' }}</small></div></div>
+  {% endfor %}
+</div>
+<div class="row g-3 g-lg-4 mt-0">
+  <div class="col-lg-6">
+    <section class="card reveal">
+      <header class="card-head"><h2 class="h3">Confusion matrix</h2><span class="mono muted">test set</span></header>
+      {% set cm = t.confusion_matrix %}{% set peak = cm|map('max')|max %}
+      <div class="table-wrap"><table class="matrix"><thead><tr><th scope="col"><span class="sr">Actual stage</span></th>{% for c in CLASSES %}<th scope="col">Predicted {{ c.key }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for row in cm %}{% set r = loop.index0 %}<tr><th scope="row">Actual {{ CLASSES[r].key }}</th>{% for v in row %}<td class="{{ 'diag' if loop.index0 == r }}" style="--a:{{ (v / peak)|round(3) if peak else 0 }}">{{ v }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
+      <p class="hint">Rows are the true stage, columns are what the model predicted. The diagonal holds the correct predictions.</p>
+    </section>
+  </div>
+  <div class="col-lg-6">
+    <section class="card reveal" style="--i:1">
+      <header class="card-head"><h2 class="h3">Per stage</h2></header>
+      <div class="table-wrap"><table class="table table-compact"><thead><tr><th>Stage</th><th class="num">Precision</th><th class="num">Recall</th><th class="num">F1</th><th class="num">Test series</th></tr></thead>
+        <tbody>{% for name, m in t.per_class.items() %}<tr><td>{{ ui.badge(name) }}</td><td class="num mono">{{ m.precision|pct }}</td><td class="num mono">{{ m.recall|pct }}</td><td class="num mono">{{ m.f1|pct }}</td><td class="num mono">{{ m.support }}</td></tr>{% endfor %}</tbody></table></div>
+    </section>
+  </div>
+</div>
+<section class="card reveal mt-gap">
+  <h2 class="h3">Training record</h2>
+  <dl class="facts facts-2">
+    <div><dt>Dataset</dt><dd>{{ card.dataset.name }}</dd></div>
+    <div><dt>Split</dt><dd>{{ card.dataset.split }}</dd></div>
+    <div><dt>Subjects (train / validation / test)</dt><dd>{{ card.dataset.subjects.train }} / {{ card.dataset.subjects.val }} / {{ card.dataset.subjects.test }}</dd></div>
+    <div><dt>Backbone</dt><dd>{{ card.architecture.backbone }}{{ ', ImageNet pre-trained' if card.architecture.pretrained }}</dd></div>
+    <div><dt>Parameters</dt><dd>{{ '{:,}'.format(card.architecture.parameters) }}</dd></div>
+    <div><dt>Optimiser and loss</dt><dd>{{ card.training.optimizer }}; {{ card.training.loss }}</dd></div>
+    <div><dt>Epochs</dt><dd>{{ card.training.stage_a_epochs }} with the ViT frozen, then up to {{ card.training.stage_b_epochs }} fine-tuning the last {{ card.training.unfrozen_blocks }} blocks</dd></div>
+    <div><dt>Trained</dt><dd>{{ card.trained_at }} on {{ card.training.device }}</dd></div>
+  </dl>
+</section>
+{% else %}
+<section class="card card-note reveal mt-gap">
+  <span class="tok tok-lg">{{ ui.icon('info') }}</span>
+  <div>
+    <h2 class="h3">No trained model is installed yet</h2>
+    <p>The system is running on a demonstration rule that estimates ventricle size. It exists so every screen can be shown end to end. It is not a trained model, it has no accuracy figures, and its results must not be used clinically.</p>
+    {% if load_error %}<p class="err">{{ ui.icon('alert') }}A model file was found but could not be loaded: {{ load_error }}</p>{% endif %}
+    <ol class="howto">
+      <li><span>Open <code>training/memora_train_colab.ipynb</code> in Google Colab with a GPU runtime and run every cell.</span></li>
+      <li><span>Download <code>memora_vit_lstm.onnx</code> and <code>model_card.json</code> when training finishes.</span></li>
+      <li><span>Place both files in the <code>model_store</code> folder and restart the application.</span></li>
+    </ol>
+    <p>Accuracy, precision, recall, F1-score, ROC-AUC and the confusion matrix from the held-out test set will then appear on this page.</p>
+  </div>
+</section>
+{% endif %}
+
+<section class="card reveal mt-gap">
+  <h2 class="h3">Limits to keep in mind</h2>
+  <ul class="tips">
+    <li>{{ ui.icon('alert') }}The model learns from a public research dataset. Scanners, protocols and populations in Nigerian centres may differ, so local validation is needed before clinical reliance.</li>
+    <li>{{ ui.icon('alert') }}It analyses structural MRI only. PET, CT, laboratory tests and cognitive assessment are outside its scope.</li>
+    <li>{{ ui.icon('alert') }}Attention maps show where the transformer focused. They do not mark lesions.</li>
+  </ul>
+</section>
+{% endblock %}

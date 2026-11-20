@@ -1,0 +1,74 @@
+{% extends "app/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ 'All facilities' if user.is_admin else (user.Facility or 'Your workspace') }}</p>
+    <h1 class="h1">Good to see you, {{ ('Dr. ' ~ user.Full_Name.split()[-1]) if user.Full_Name.startswith('Dr') else user.Full_Name.split()[0] }}.</h1>
+  </div>
+  <div class="row-actions">
+    <a class="btn btn-ghost" href="{{ url_for('workspace.patient_new') }}">{{ ui.icon('plus') }}<span>New patient</span></a>
+    <a class="btn btn-gold" href="{{ url_for('workspace.analyse') }}">{{ ui.icon('scan') }}<span>Analyse a scan</span></a>
+  </div>
+</div>
+
+<div class="row g-3 g-lg-4">
+  <div class="col-6 col-lg-3"><div class="kpi spot reveal"><span class="tok">{{ ui.icon('users') }}</span><p>Patients</p><b data-count="{{ stats.patients }}">{{ stats.patients }}</b></div></div>
+  <div class="col-6 col-lg-3"><div class="kpi spot reveal" style="--i:1"><span class="tok">{{ ui.icon('layers') }}</span><p>Studies analysed</p><b data-count="{{ stats.studies }}">{{ stats.studies }}</b><small>{{ stats.week }} in the last 7 days</small></div></div>
+  <div class="col-6 col-lg-3"><div class="kpi spot reveal" style="--i:2"><span class="tok tok-alert">{{ ui.icon('alert') }}</span><p>Flagged for review</p><b data-count="{{ stats.flagged }}">{{ stats.flagged }}</b><small>early stage or Alzheimer's</small></div></div>
+  <div class="col-6 col-lg-3"><div class="kpi spot reveal" style="--i:3"><span class="tok">{{ ui.icon('activity') }}</span><p>Average confidence</p><b>{{ stats.avg_conf|pct(0) if stats.avg_conf else 'n/a' }}</b></div></div>
+</div>
+
+<div class="row g-3 g-lg-4 mt-0">
+  <div class="col-lg-7">
+    <section class="card spot reveal">
+      <header class="card-head"><h2 class="h3">Studies in the last 14 days</h2><span class="mono muted">{{ trend|sum(attribute='count') }} total</span></header>
+      {% if trend|sum(attribute='count') %}
+      <div class="spark" role="img" aria-label="Studies per day over the last 14 days">
+        {% for t in trend %}<div class="spark-col" title="{{ t.label }}: {{ t.count }}"><i style="--h:{{ (t.count / trend_max * 100)|round(1) }}%"></i>{% if loop.first or loop.last or loop.index == 7 %}<span>{{ t.label }}</span>{% endif %}</div>{% endfor %}
+      </div>
+      {% else %}<p class="empty-inline">No studies in this period yet.</p>{% endif %}
+    </section>
+  </div>
+  <div class="col-lg-5">
+    <section class="card spot reveal" style="--i:1">
+      <header class="card-head"><h2 class="h3">Results by stage</h2></header>
+      <ul class="bars">
+        {% for d in dist %}
+        <li><div class="bars-top"><span>{{ ui.badge(d.name) }}</span><b class="mono">{{ d.count }}</b></div><div class="bar tone-{{ d.name|tone }}"><i style="--w:{{ (d.count / total * 100)|round(1) if total else 0 }}%"></i></div></li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+</div>
+
+<div class="row g-3 g-lg-4 mt-0">
+  <div class="col-lg-7">
+    <section class="card reveal">
+      <header class="card-head"><h2 class="h3">Recent studies</h2><a class="link" href="{{ url_for('workspace.studies') }}">All records {{ ui.icon('arrow') }}</a></header>
+      {% if recent %}
+      <ul class="feed">
+        {% for pr in recent %}
+        <li><a href="{{ url_for('workspace.study', sid=pr.Prediction_ID) }}">
+          <img src="{{ url_for('workspace.media', sid=pr.Prediction_ID, name='slice_08.png') }}" alt="" loading="lazy" width="48" height="48">
+          <div><b>{{ pr.patient.Full_Name }}</b><span>{{ pr.patient.code }} · {{ pr.Prediction_Date|dt('%d %b, %H:%M') }}</span></div>
+          {{ ui.badge(pr.Disease_Category) }}
+          <span class="mono conf">{{ pr.Confidence_Score|pct(0) }}</span>
+        </a></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty"><span class="tok tok-lg">{{ ui.icon('scan') }}</span><h3>No studies yet</h3><p>Register a patient, upload their MRI series and the result will appear here.</p><a class="btn btn-gold" href="{{ url_for('workspace.analyse') }}">Analyse a scan</a></div>
+      {% endif %}
+    </section>
+  </div>
+  <div class="col-lg-5">
+    <section class="card spot reveal" style="--i:1">
+      <header class="card-head"><h2 class="h3">Studies by zone</h2><span class="mono muted">Nigeria</span></header>
+      <ul class="zonebars">
+        {% for z in zones %}<li><span>{{ z.name }}</span><div class="bar"><i style="--w:{{ (z.count / zone_max * 100)|round(1) }}%"></i></div><b class="mono">{{ z.count }}</b></li>{% endfor %}
+      </ul>
+    </section>
+  </div>
+</div>
+{% endblock %}

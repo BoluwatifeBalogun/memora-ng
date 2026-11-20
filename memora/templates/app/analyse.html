@@ -1,0 +1,64 @@
+{% extends "app/base.html" %}
+{% block title %}Analyse a scan{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="eyebrow">New study</p><h1 class="h1">Analyse a scan</h1></div>
+</div>
+{% if not patients %}
+<div class="card"><div class="empty"><span class="tok tok-lg">{{ ui.icon('users') }}</span><h3>Register a patient first</h3><p>Every study belongs to a patient record, so results can be followed over time.</p><a class="btn btn-gold" href="{{ url_for('workspace.patient_new') }}">New patient</a></div></div>
+{% else %}
+<form method="post" enctype="multipart/form-data" class="analyse" data-analyse novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="row g-3 g-lg-4">
+    <div class="col-lg-8">
+      <section class="card">
+        <header class="card-head"><h2 class="h3"><span class="num">1</span>MRI series</h2><span class="mono muted" data-count-label>No files chosen</span></header>
+        <label class="drop beam" data-drop for="slices">
+          <input id="slices" name="slices" type="file" multiple accept=".png,.jpg,.jpeg,.bmp,.tif,.tiff,.nii,.gz" required>
+          <span class="tok tok-lg">{{ ui.icon('upload') }}</span>
+          <b>Drop the slices here, or choose files</b>
+          <span>PNG, JPG, BMP or TIFF slices named in order, or one NIfTI volume (.nii, .nii.gz). Up to 64 slices.</span>
+        </label>
+        <p class="err" data-file-error hidden role="alert"></p>
+        <div class="thumbs" data-thumbs hidden></div>
+        <ul class="tips">
+          <li>{{ ui.icon('check') }}{{ seq_len }} or more slices through the ventricles and hippocampus give the sequence model full context.</li>
+          <li>{{ ui.icon('check') }}Files are sorted by name, so number them in anatomical order.</li>
+          <li>{{ ui.icon('check') }}Colour photos, documents and blank images are rejected automatically.</li>
+        </ul>
+      </section>
+    </div>
+    <div class="col-lg-4">
+      <section class="card sticky">
+        <header class="card-head"><h2 class="h3"><span class="num">2</span>Patient</h2></header>
+        <div class="field">
+          <label for="f-patient">Patient</label>
+          <div class="select"><select id="f-patient" name="patient" required>
+            <option value="">Select a patient</option>
+            {% for p in patients %}<option value="{{ p.Patient_ID }}" {{ 'selected' if p.Patient_ID == selected }}>{{ p.Full_Name }} · {{ p.code }}</option>{% endfor %}
+          </select>{{ ui.icon('chevron') }}</div>
+          <p class="hint">Not listed? <a href="{{ url_for('workspace.patient_new') }}">Create a patient</a></p>
+        </div>
+        {{ ui.field('exam_date', 'Date of examination', '', type='date') }}
+        <button class="btn btn-gold btn-block btn-lg" type="submit" data-submit><span>Run analysis</span>{{ ui.icon('arrow') }}</button>
+        <p class="fine">{{ ui.icon('info') }}The result supports, and does not replace, clinical judgement.</p>
+      </section>
+    </div>
+  </div>
+</form>
+
+<div class="runner" data-runner hidden aria-live="polite">
+  <div class="runner-card beam">
+    <div class="scanner">{{ ui.brain(1.15) }}<div class="patchgrid">{% for i in range(49) %}<i></i>{% endfor %}</div><div class="scanline"></div></div>
+    <h2 class="h2" data-runner-title>Analysing the series</h2>
+    <ol class="runner-steps">
+      <li data-step>Uploading slices</li>
+      <li data-step>Validating and preprocessing</li>
+      <li data-step>Vision Transformer: spatial features</li>
+      <li data-step>LSTM: reading across slices</li>
+      <li data-step>Classifying and saving the record</li>
+    </ol>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
